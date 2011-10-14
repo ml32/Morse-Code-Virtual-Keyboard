@@ -7,8 +7,8 @@
 #define KEY_UP   0x00
 
 typedef struct key_in_event {
-	uint8_t  state;
-	uint32_t time;
+	int state;
+	int time;
 } key_in_event_t;
 
 int  key_init();
@@ -16,7 +16,7 @@ int  key_init();
 /* Blocks until an event is received, or the duration specified by timeout
  * (in milliseconds) has passed.
  * Returns 0 on success, or -1 on timeout */
-int key_next(key_in_event_t *evt, uint32_t timeout);
+int key_next(key_in_event_t *evt, int timeout);
 
 
 #endif

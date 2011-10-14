@@ -55,10 +55,12 @@ int main(int argc, char **argv) {
 
 	key_in_event_t evt;
 	for (;;) {
-		if (key_poll(&evt) > 0) {
+		if (key_next(&evt, 50) < 0) {
+			printf("Timeout!\n");
+		} else {
 			printf("Event: %i: %s\n", evt.time, evt.state == KEY_DOWN ? "PRESSED" : "RELEASED");
 		}
-		window_main();
+		//window_main();
 	}
 	return 0;
 }
