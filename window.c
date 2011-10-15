@@ -1,6 +1,7 @@
+#include "window.h"
+
 #include <clutter/clutter.h>
 #include <clutter/x11/clutter-x11.h>
-#include "window.h"
 #include "morsetree.h"
 
 #define WINDOW_ITEM_WIDTH  24
@@ -52,6 +53,11 @@ static const ClutterColor bgcolor_item = {
 	.alpha = 0xC0
 };
 
+static void window_move_items(morse_sym_t *symlist, int n, int x, int y, int w, int h, int duration);
+static void window_move_item(morse_sym_t sym, int x, int y, int duration);
+
+
+
 int window_init(int *argc, char ***argv) {
 	Display *display;
 	Window   stagewin;
@@ -69,6 +75,8 @@ int window_init(int *argc, char ***argv) {
 	ClutterActor         *label;
 	char                  buf[2];
 
+	g_thread_init(NULL);
+	clutter_threads_init();
 	clutter_x11_set_use_argb_visual(TRUE);
 	clutter_init(argc, argv);
 	window_stage = clutter_stage_get_default();
@@ -125,20 +133,46 @@ int window_init(int *argc, char ***argv) {
 
 	clutter_actor_show_all(window_stage);
 
-	uint8_t     n;
-	morse_sym_t symlist[MORSE_SYMLIST_SIZE];
-
-	morse_tree_get_hidden(symlist, &n);
-	window_move_items(symlist, n, 0, 48, 880, 48);
-	morse_tree_get_dits(symlist, &n);
-	window_move_items(symlist, n, 0, 0, 420, 48);
-	morse_tree_get_dahs(symlist, &n);
-	window_move_items(symlist, n, 460, 0, 420, 48);
+	window_update(50);
 
 	return 0;
 }
 
-void window_move_items(morse_sym_t *symlist, uint8_t n, int x, int y, int w, int h) {
+void window_update(int element_time) {
+	static morse_sym_t symlist[MORSE_SYMLIST_SIZE];
+	uint8_t n;
+
+	clutter_threads_enter();
+
+	morse_tree_get_hidden(symlist, &n);
+	window_move_items(symlist, n, 0, 48, 880, 48, element_time / 2);
+	morse_tree_get_dits(symlist, &n);
+	window_move_items(symlist, n, 0, 0, 420, 48, element_time / 2);
+	morse_tree_get_dahs(symlist, &n);
+	window_move_items(symlist, n, 460, 0, 420, 48, element_time / 2);
+	
+	morse_sym_t sym = morse_tree_get_selected();
+	window_move_item(sym, 420 + (40 - WINDOW_ITEM_WIDTH) / 2, (48 - WINDOW_ITEM_HEIGHT) / 2, element_time / 2);
+
+	clutter_threads_leave();
+}
+
+void window_main() {
+	clutter_main();
+}
+
+static void window_move_item(morse_sym_t sym, int x, int y, int duration) {
+	printf("%d, %d, %d\n", sym, x, y);
+	if (sym == MORSE_SYM_NULL) return;
+	ClutterActor *item;
+	item = window_items[sym-1];
+	clutter_actor_animate(item, CLUTTER_EASE_IN_OUT_CUBIC, duration,
+			      "x", (float)x,
+			      "y", (float)y,
+			      NULL);
+}
+
+static void window_move_items(morse_sym_t *symlist, int n, int x, int y, int w, int h, int duration) {
 	int group_w = n * WINDOW_ITEM_WIDTH / 2;
 	int group_h = 2 * WINDOW_ITEM_HEIGHT;
 	int group_x = x + (w - group_w) / 2;
@@ -146,17 +180,15 @@ void window_move_items(morse_sym_t *symlist, uint8_t n, int x, int y, int w, int
 	ClutterActor *item;
 	float item_x;
 	float item_y;
-	for (uint8_t i = 0; i < n; i++) {
+
+	for (int i = 0; i < n; i++) {
 		item   = window_items[symlist[i]-1];
 		item_x = (float)group_x + (float)i * (float)WINDOW_ITEM_WIDTH / 2.0f;
 		item_y = (float)group_y + (i % 2 == 0 ? 0.0f : (float)WINDOW_ITEM_HEIGHT);
-		clutter_actor_animate(item, CLUTTER_EASE_IN_OUT_CUBIC, 100,
+		clutter_actor_animate(item, CLUTTER_EASE_IN_OUT_CUBIC, duration,
 		                      "x", item_x,
 				      "y", item_y,
 				      NULL);
 	}
 }
 
-void window_main() {
-	clutter_main();
-}

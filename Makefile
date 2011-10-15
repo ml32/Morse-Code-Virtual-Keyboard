@@ -9,7 +9,7 @@ CFLAGS+=$(shell pkg-config --cflags clutter-x11-1.0)
 LDFLAGS=$(shell pkg-config --libs clutter-1.0)
 LDFLAGS+=$(shell pkg-config --libs clutter-x11-1.0)
 
-OBJS=window.o morsetree.o key_X11.o main.o
+OBJS=window.o morsetree.o morse.o key_X11.o main.o
 BINARYNAME=test
 
 all: main

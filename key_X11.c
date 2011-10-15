@@ -49,6 +49,7 @@ static void key_next_X11(key_in_event_t *evt) {
 		if (xevent1.type == KeyRelease) {
 			if (XPending(display) > 0) {
 				XPeekEvent(display, &xevent2);
+				/* skip auto-repeats */
 				if (xevent2.type == KeyPress &&
 				    xevent2.xkey.time == xevent1.xkey.time)
 				{

@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-typedef uint8_t morse_sym_t;
+typedef int morse_sym_t;
 
 typedef struct morse_node {
 	struct morse_node *dit, *dah;

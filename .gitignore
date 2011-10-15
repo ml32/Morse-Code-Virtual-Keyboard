@@ -1,0 +1,8 @@
+*.o
+*.so
+*.exe
+*.dll
+
+test
+gmon.out
+screenshots/
